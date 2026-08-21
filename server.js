@@ -1,4 +1,5 @@
 ﻿const express = require('express');
+const swaggerUi = require('swagger-ui-express');
 const app = express();
 
 app.use(express.json());
@@ -9,6 +10,112 @@ let tasks = [
   { id: 2, title: "Build CRUD API", done: false },
   { id: 3, title: "Publish to GitHub", done: false }
 ];
+
+// Stage 5: Swagger UI OpenAPI Configuration
+const swaggerDocument = {
+  openapi: '3.0.0',
+  info: {
+    title: 'Task API',
+    version: '1.0.0',
+    description: 'A simple in-memory CRUD API for managing tasks'
+  },
+  paths: {
+    '/': {
+      get: {
+        summary: 'Root endpoint',
+        responses: {
+          200: { description: 'API info' }
+        }
+      }
+    },
+    '/health': {
+      get: {
+        summary: 'Health check',
+        responses: {
+          200: { description: 'Server is healthy' }
+        }
+      }
+    },
+    '/tasks': {
+      get: {
+        summary: 'Get all tasks',
+        responses: {
+          200: { description: 'Returns list of all tasks' }
+        }
+      },
+      post: {
+        summary: 'Create a new task',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  title: { type: 'string', example: 'Buy milk' }
+                },
+                required: ['title']
+              }
+            }
+          }
+        },
+        responses: {
+          201: { description: 'Task created successfully' },
+          400: { description: 'Bad Request - Title is required' }
+        }
+      }
+    },
+    '/tasks/{id}': {
+      get: {
+        summary: 'Get task by ID',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'integer' } }
+        ],
+        responses: {
+          200: { description: 'Task found' },
+          404: { description: 'Task not found' }
+        }
+      },
+      put: {
+        summary: 'Update a task',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'integer' } }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  title: { type: 'string', example: 'Buy almond milk' },
+                  done: { type: 'boolean', example: true }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: { description: 'Task updated successfully' },
+          404: { description: 'Task not found' }
+        }
+      },
+      delete: {
+        summary: 'Delete a task',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'integer' } }
+        ],
+        responses: {
+          204: { description: 'Task deleted (No Content)' },
+          404: { description: 'Task not found' }
+        }
+      }
+    }
+  }
+};
+
+// Mount Swagger UI at /docs
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Stage 0: Root endpoint
 app.get('/', (req, res) => {
