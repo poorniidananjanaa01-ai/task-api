@@ -50,6 +50,31 @@ app.post('/tasks', (req, res) => {
   res.status(201).json(newTask);
 });
 
+// Stage 4: Update Task
+app.put('/tasks/:id', (req, res) => {
+  const taskId = parseInt(req.params.id);
+  const task = tasks.find(t => t.id === taskId);
+  if (!task) {
+    return res.status(404).json({ error: `Task ${taskId} not found` });
+  }
+  
+  if (req.body.title !== undefined) task.title = req.body.title;
+  if (req.body.done !== undefined) task.done = req.body.done;
+  
+  res.json(task);
+});
+
+// Stage 4: Delete Task
+app.delete('/tasks/:id', (req, res) => {
+  const taskId = parseInt(req.params.id);
+  const index = tasks.findIndex(t => t.id === taskId);
+  if (index === -1) {
+    return res.status(404).json({ error: `Task ${taskId} not found` });
+  }
+  tasks.splice(index, 1);
+  res.status(204).send();
+});
+
 // Start the server
 app.listen(3000, () => {
   console.log('Server running on http://localhost:3000');
