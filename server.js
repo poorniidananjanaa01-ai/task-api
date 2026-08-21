@@ -35,6 +35,21 @@ app.get('/tasks/:id', (req, res) => {
   res.json(task);
 });
 
+// Stage 3: Create Task with Validation
+app.post('/tasks', (req, res) => {
+  const { title } = req.body;
+  if (!title || title.trim() === "") {
+    return res.status(400).json({ error: "Title is required" });
+  }
+  const newTask = {
+    id: tasks.length ? Math.max(...tasks.map(t => t.id)) + 1 : 1,
+    title: title,
+    done: false
+  };
+  tasks.push(newTask);
+  res.status(201).json(newTask);
+});
+
 // Start the server
 app.listen(3000, () => {
   console.log('Server running on http://localhost:3000');
