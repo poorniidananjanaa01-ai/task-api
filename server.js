@@ -1,15 +1,29 @@
 ﻿const express = require('express');
 const swaggerUi = require('swagger-ui-express');
-const app = express();
+const Database = require('better-sqlite3');
 
+const app = express();
 app.use(express.json());
 
-// Stage 2: In-memory task list
-let tasks = [
-  { id: 1, title: "Learn HTTP", done: true },
-  { id: 2, title: "Build CRUD API", done: false },
-  { id: 3, title: "Publish to GitHub", done: false }
-];
+const db = new Database('tasks.db');
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    done INTEGER NOT NULL DEFAULT 0
+  )
+`);
+
+const count = db.prepare('SELECT COUNT(*) AS count FROM tasks').get().count;
+if (count === 0) {
+  const insert = db.prepare('INSERT INTO tasks (title, done) VALUES (?, ?)');
+  insert.run('Buy groceries', 0);
+  insert.run('Read Express docs', 0);
+  insert.run('Build CRUD API with SQLite', 1);
+}
+
+const toTask = row => ({ ...row, done: Boolean(row.done) });
 
 // Stage 5: Swagger UI OpenAPI Configuration
 const swaggerDocument = {
@@ -17,7 +31,7 @@ const swaggerDocument = {
   info: {
     title: 'Task API',
     version: '1.0.0',
-    description: 'A simple in-memory CRUD API for managing tasks'
+    description: 'A SQLite-backed CRUD API for managing tasks'
   },
   paths: {
     '/': {
@@ -129,56 +143,55 @@ app.get('/health', (req, res) => {
 
 // Stage 2: Read All Tasks
 app.get('/tasks', (req, res) => {
-  res.json(tasks);
+  res.json(db.prepare('SELECT id, title, done FROM tasks ORDER BY id').all().map(toTask));
 });
 
 // Stage 2: Read Single Task
 app.get('/tasks/:id', (req, res) => {
-  const taskId = parseInt(req.params.id);
-  const task = tasks.find(t => t.id === taskId);
+  const taskId = Number.parseInt(req.params.id, 10);
+  const task = db.prepare('SELECT id, title, done FROM tasks WHERE id = ?').get(taskId);
   if (!task) {
     return res.status(404).json({ error: `Task ${taskId} not found` });
   }
-  res.json(task);
+  res.json(toTask(task));
 });
 
 // Stage 3: Create Task with Validation
 app.post('/tasks', (req, res) => {
   const { title } = req.body;
-  if (!title || title.trim() === "") {
+  if (typeof title !== 'string' || title.trim() === '') {
     return res.status(400).json({ error: "Title is required" });
   }
-  const newTask = {
-    id: tasks.length ? Math.max(...tasks.map(t => t.id)) + 1 : 1,
-    title: title,
-    done: false
-  };
-  tasks.push(newTask);
-  res.status(201).json(newTask);
+  const result = db.prepare('INSERT INTO tasks (title, done) VALUES (?, 0)').run(title.trim());
+  const newTask = db.prepare('SELECT id, title, done FROM tasks WHERE id = ?').get(result.lastInsertRowid);
+  res.status(201).json(toTask(newTask));
 });
 
 // Stage 4: Update Task
 app.put('/tasks/:id', (req, res) => {
-  const taskId = parseInt(req.params.id);
-  const task = tasks.find(t => t.id === taskId);
+  const taskId = Number.parseInt(req.params.id, 10);
+  const task = db.prepare('SELECT id, title, done FROM tasks WHERE id = ?').get(taskId);
   if (!task) {
     return res.status(404).json({ error: `Task ${taskId} not found` });
   }
-  
-  if (req.body.title !== undefined) task.title = req.body.title;
-  if (req.body.done !== undefined) task.done = req.body.done;
-  
-  res.json(task);
+
+  const title = req.body.title === undefined ? task.title : req.body.title;
+  const done = req.body.done === undefined ? Boolean(task.done) : req.body.done;
+  if (typeof title !== 'string' || title.trim() === '' || typeof done !== 'boolean') {
+    return res.status(400).json({ error: 'Title must be a non-empty string and done must be a boolean' });
+  }
+
+  db.prepare('UPDATE tasks SET title = ?, done = ? WHERE id = ?').run(title.trim(), done ? 1 : 0, taskId);
+  res.json(toTask(db.prepare('SELECT id, title, done FROM tasks WHERE id = ?').get(taskId)));
 });
 
 // Stage 4: Delete Task
 app.delete('/tasks/:id', (req, res) => {
-  const taskId = parseInt(req.params.id);
-  const index = tasks.findIndex(t => t.id === taskId);
-  if (index === -1) {
+  const taskId = Number.parseInt(req.params.id, 10);
+  const result = db.prepare('DELETE FROM tasks WHERE id = ?').run(taskId);
+  if (result.changes === 0) {
     return res.status(404).json({ error: `Task ${taskId} not found` });
   }
-  tasks.splice(index, 1);
   res.status(204).send();
 });
 

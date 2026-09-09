@@ -1,56 +1,26 @@
-﻿# Task API
+﻿# Task API (SQLite Persistence)
 
-A simple in-memory CRUD API for managing tasks, built with Express.js and Node.js.
+A database-backed RESTful CRUD API built with Node.js, Express, and SQLite (`better-sqlite3`).
+
+## Why SQLite?
+SQLite was chosen because it is zero-configuration, serverless, and stores all data locally in a single file (`tasks.db`). This guarantees data persistence across server restarts without complex setup.
 
 ## Features
-
 - ✅ **Read Tasks** - Get all tasks or a specific task by ID
-- ✅ **Create Tasks** - Add new tasks with validation
+- ✅ **Create Tasks** - Add new tasks with title validation
 - ✅ **Update Tasks** - Modify task title and completion status
-- ✅ **Delete Tasks** - Remove tasks from the list
-- ✅ **Health Check** - Monitor server status
-- ✅ **API Documentation** - Interactive Swagger UI
+- ✅ **Delete Tasks** - Remove tasks permanently
+- ✅ **Health Check** - Monitor server health status
+- ✅ **API Documentation** - Interactive Swagger UI integration
 
 ## Tech Stack
-
 - **Node.js** - JavaScript runtime
 - **Express.js** - Web framework
-- **Swagger UI** - API documentation
+- **SQLite (`better-sqlite3`)** - Persistent file database
+- **Swagger UI** - Interactive documentation
 
-## Installation
-
-```bash
-npm install
-```
-
-## Running the Server
-
-```bash
-npm start
-```
-
-The server will run on `http://localhost:3000`
-
-## API Endpoints
-
-- `GET /` - Root endpoint (API info)
-- `GET /health` - Health check
-- `GET /tasks` - Get all tasks
-- `GET /tasks/:id` - Get a specific task
-- `POST /tasks` - Create a new task
-- `PUT /tasks/:id` - Update a task
-- `DELETE /tasks/:id` - Delete a task
-
-## Documentation
-
-Visit `http://localhost:3000/docs` for interactive Swagger UI documentation.
-
-## Example Request
-
-```bash
-curl http://localhost:3000/tasks
-```
-
-## License
-
-MIT
+## How to Run
+1. Clone the repository:
+   ```bash
+   git clone [https://github.com/poorniidananjanaa01-ai/task-api.git](https://github.com/poorniidananjanaa01-ai/task-api.git)
+   cd task-api

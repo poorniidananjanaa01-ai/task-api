@@ -1,12 +1,13 @@
-﻿{
+{
   "name": "task-api",
   "version": "1.0.0",
-  "description": "A simple in-memory CRUD API for managing tasks",
+  "description": "A SQLite-backed CRUD API for managing tasks",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
+    "better-sqlite3": "^13.0.3",
     "express": "^4.18.2",
     "swagger-ui-express": "^5.0.0"
   }
